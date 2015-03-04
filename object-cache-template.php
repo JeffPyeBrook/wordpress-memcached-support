@@ -47,10 +47,10 @@ if ( ! defined( 'WP_CACHE_KEY_SALT' ) ) {
 }
 
 if ( class_exists( 'Memcached' ) ) {
-	require_once __DIR__ . '/plugins/wordpress-memcached-support/memcached-class-object-cache.php';
+	require_once %PLUGININSTALLDIRECTORY%memcached-class-object-cache.php';
 	error_log( 'Memcached support using PHP Memcached class enabled' );
 } else if ( class_exists( 'Memcache' ) ) {
-	require_once __DIR__ . '/plugins/wordpress-memcached-support/memcache-class-object-cache.php';
+	require_once %PLUGININSTALLDIRECTORY%memcache-class-object-cache.php';
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 		error_log( 'Memcached support using PHP Memcache class enabled' );
 	}
