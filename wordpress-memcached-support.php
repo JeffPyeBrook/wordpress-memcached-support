@@ -59,7 +59,7 @@ function wordpress_memcached_support_activate() {
 		// build an object-cache.php for this installation
 		$file_source                 = file_get_contents( $template_object_cache_file_path );
 		$this_installation_directory = plugin_dir_path( __FILE__ );
-		$file_source                 = str_replace( $file_source, '%PLUGININSTALLDIRECTORY%', $this_installation_directory );
+		$file_source                 = str_replace(  '%PLUGININSTALLDIRECTORY%', $this_installation_directory, $file_source );
 
 		file_put_contents( $distribution_object_cache_file_path, $file_source );
 		chmod( $distribution_object_cache_file_path, 644 );
@@ -112,12 +112,11 @@ function wordpress_memcached_support_activate() {
 
 	if (
 		! file_exists( $operational_object_cache_file_path )
-		&& file_exists( $backup_distribution_object_cache_file_path )
+		&& file_exists( $distribution_object_cache_file_path )
 	) {
-		$result = copy( $operational_object_cache_file_path, $distribution_object_cache_file_path );
+		$result = copy( $distribution_object_cache_file_path, $operational_object_cache_file_path );
 		if ( ! $result ) {
 			wordpress_memcached_support_set_admin_notice( 'ERROR: could not copy new object-cache.php from plugin directory to WordPress content directory, aborting' );
-
 			return;
 		}
 	}
@@ -213,8 +212,8 @@ function wordpress_memcached_support_set_admin_notice( $notice = false ) {
 
 function wordpress_memcached_support_show_admin_notice() {
 	$wordpress_memcached_support_notice = get_option( 'wordpress_memcached_support_notice', '' );
-	if ( ! empty( $notice ) ) {
-		$class = ( strpos( $notice, 'ERROR' ) === false ) ? 'updated' : 'error';
+	if ( ! empty( $wordpress_memcached_support_notice ) ) {
+		$class = ( strpos( $wordpress_memcached_support_notice, 'ERROR' ) === false ) ? 'updated' : 'error';
 		?>
 		<div class="<?php echo $class; ?>">
 			<p><?php echo $wordpress_memcached_support_notice; ?></p>

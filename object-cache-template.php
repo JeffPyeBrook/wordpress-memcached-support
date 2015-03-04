@@ -47,14 +47,24 @@ if ( ! defined( 'WP_CACHE_KEY_SALT' ) ) {
 }
 
 if ( class_exists( 'Memcached' ) ) {
-	require_once %PLUGININSTALLDIRECTORY%memcached-class-object-cache.php';
-	error_log( 'Memcached support using PHP Memcached class enabled' );
+	if ( file_exists( '%PLUGININSTALLDIRECTORY%memcached-class-object-cache.php' ) ) {
+		require_once '%PLUGININSTALLDIRECTORY%memcached-class-object-cache.php';
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'Memcached support using PHP Memcached class enabled' );
+		}
+	} else {
+		error_log( 'ERROR: Could not find path to plugin directory with memcached support class! Has your configuration changed? Suggest you deactivate and re-activate the plugin.' );
+	}
 } else if ( class_exists( 'Memcache' ) ) {
-	require_once %PLUGININSTALLDIRECTORY%memcache-class-object-cache.php';
-	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-		error_log( 'Memcached support using PHP Memcache class enabled' );
+	if ( file_exists(  '%PLUGININSTALLDIRECTORY%memcache-class-object-cache.php' ) ) {
+		require_once '%PLUGININSTALLDIRECTORY%memcache-class-object-cache.php';
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'Memcached support using PHP Memcache class enabled' );
+		}
+	}else {
+		error_log( 'ERROR: Could not find path to plugin directory with memcache support class! Has your configuration changed? Suggest you deactivate and re-activate the plugin.' );
 	}
 } else {
-	error_log( 'No Memcached support, neither the PHP Memcached nor the PHP Memcache class was founobject-cache.phpd, see http://pecl.php.net/' );
+	error_log( 'No Memcached support, neither the PHP Memcached nor the PHP Memcache class was found, see http://pecl.php.net/ for configuration help' );
 }
 
