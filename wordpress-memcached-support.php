@@ -1,5 +1,14 @@
 <?php
 /*
+Plugin Name: Memcached Object Cache for WordPress
+Description: Memcached via PHP Memcache or Memcached Class Support for WordPress
+Version: 2.0.0
+Plugin URI: http://wordpress.org/extend/plugins/wordpress-memcached-support/
+Author: Jeffrey Schutzman - - uses code from Ryan Boren, Denis de Bernardy, Matt Martz, Mike Schroder, Scott Taylor
+*/
+
+
+/*
 ** Copyright 2010-2015, Pye Brook Company, Inc.
 **
 **
@@ -24,14 +33,19 @@
 **
 */
 
-define ( 'WORDPRESS_MEMCACHED_SUPPORT_VERSION' , '1.0' );
+define ( 'WORDPRESS_MEMCACHED_SUPPORT_VERSION', '2.0' );
 
 function wordpress_memcached_support_activate() {
+
+	if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
+		// do not do this work while processing AJAX
+		return;
+	}
 
 	// Activation code here...
 	$last_activated_version = get_option( 'wordpress_memcached_support_version', '0.0' );
 
-	if ( WORDPRESS_MEMCACHED_SUPPORT_VERSION != $last_activated_version ) {
+	if ( WORDPRESS_MEMCACHED_SUPPORT_VERSION == $last_activated_version ) {
 		// no work to do we already activated at least once
 		return;
 	}
@@ -41,11 +55,11 @@ function wordpress_memcached_support_activate() {
 	// make sure we have an object-cache.php with full paths to plugin directory to install to WordPress
 	// content directory.
 	$distribution_object_cache_file_path = plugin_dir_path( __FILE__ ) . 'object-cache.php';
-	if (  ! file_exists( $distribution_object_cache_file_path ) ) {
+	if ( ! file_exists( $distribution_object_cache_file_path ) ) {
 		// build an object-cache.php for this installation
-		$file_source = file_get_contents( $template_object_cache_file_path );
+		$file_source                 = file_get_contents( $template_object_cache_file_path );
 		$this_installation_directory = plugin_dir_path( __FILE__ );
-		$file_source = str_replace( $file_source, '%PLUGININSTALLDIRECTORY%', $this_installation_directory );
+		$file_source                 = str_replace( $file_source, '%PLUGININSTALLDIRECTORY%', $this_installation_directory );
 
 		file_put_contents( $distribution_object_cache_file_path, $file_source );
 		chmod( $distribution_object_cache_file_path, 644 );
@@ -53,27 +67,25 @@ function wordpress_memcached_support_activate() {
 
 	if ( ! file_exists( $distribution_object_cache_file_path ) ) {
 		wordpress_memcached_support_set_admin_notice( 'ERROR: could not create configured object-cache.php for your site, aborting' );
+
 		return;
 	}
 
 	$distribution_object_cache_file_unique_id = sha1_file( $distribution_object_cache_file_path );
 
-
 	$operational_object_cache_file_path = wp_content_dir() . 'object-cache.php';
-	if (  file_exists( $operational_object_cache_file_path ) ) {
+	if ( file_exists( $operational_object_cache_file_path ) ) {
 		$operational_object_cache_file_unique_id = sha1_file( $operational_object_cache_file_path );
 	} else {
 		$operational_object_cache_file_unique_id = '';
 	}
 
-
-	$backup_distribution_object_cache_file_path = plugin_dir_path( __FILE__ ) . 'object-cache.php.backup';;
-	if (  file_exists( $backup_distribution_object_cache_file_path ) ) {
+	$backup_distribution_object_cache_file_path = plugin_dir_path( __FILE__ ) . 'object-cache.php.backup';
+	if ( file_exists( $backup_distribution_object_cache_file_path ) ) {
 		$backup_distribution_object_cache_file_unique_id = sha1_file( $backup_distribution_object_cache_file_path );
 	} else {
 		$backup_distribution_object_cache_file_unique_id = '';
 	}
-
 
 	// if there is an operational object cache, and it has not already been backed up, and it is not the file from
 	// our plugin directory we backup the file, then remove the operational file
@@ -84,12 +96,14 @@ function wordpress_memcached_support_activate() {
 		$result = copy( $operational_object_cache_file_path, $backup_distribution_object_cache_file_path );
 		if ( ! $result ) {
 			wordpress_memcached_support_set_admin_notice( 'ERROR: could not backup operational object-cache.php, aborting' );
+
 			return;
 		}
 
 		$result = unlink( $operational_object_cache_file_path );
 		if ( ! $result ) {
 			wordpress_memcached_support_set_admin_notice( 'ERROR: could not remove existing operational object-cache.php, aborting' );
+
 			return;
 		}
 
@@ -98,11 +112,12 @@ function wordpress_memcached_support_activate() {
 
 	if (
 		! file_exists( $operational_object_cache_file_path )
-	      && file_exists( $backup_distribution_object_cache_file_path )
+		&& file_exists( $backup_distribution_object_cache_file_path )
 	) {
 		$result = copy( $operational_object_cache_file_path, $distribution_object_cache_file_path );
 		if ( ! $result ) {
 			wordpress_memcached_support_set_admin_notice( 'ERROR: could not copy new object-cache.php from plugin directory to WordPress content directory, aborting' );
+
 			return;
 		}
 	}
@@ -119,6 +134,42 @@ function wordpress_memcached_support_deactivate() {
 
 	// Deactivation code here...
 	delete_option( 'wordpress_memcached_support_version' );
+
+
+	$distribution_object_cache_file_path = plugin_dir_path( __FILE__ ) . 'object-cache.php';
+	if ( file_exists( $distribution_object_cache_file_path ) ) {
+		unlink( $distribution_object_cache_file_path );
+		if ( file_exists( $distribution_object_cache_file_path ) ) {
+			wordpress_memcached_support_set_admin_notice( 'ERROR DEACTIVATING: could remove object-cache.php from WordPress plugin directory. Uninstall may have failed, aborting' );
+
+			return;
+		}
+	}
+
+	$operational_object_cache_file_path = wp_content_dir() . 'object-cache.php';
+	if ( file_exists( $operational_object_cache_file_path ) ) {
+		unlink( $operational_object_cache_file_path );
+		if ( file_exists( $operational_object_cache_file_path ) ) {
+			wordpress_memcached_support_set_admin_notice( 'ERROR DEACTIVATING: could remove object-cache.php from WordPress content directory. Uninstall may have failed, aborting' );
+
+			return;
+		}
+	}
+
+	$backup_distribution_object_cache_file_path = plugin_dir_path( __FILE__ ) . 'object-cache.php.backup';
+	if ( file_exists( $backup_distribution_object_cache_file_path ) ) {
+		$result = copy( $backup_distribution_object_cache_file_path, $operational_object_cache_file_path );
+		if ( ! $result ) {
+			wordpress_memcached_support_set_admin_notice( 'ERROR DEACTIVATING: could restore backup object-cache.php to WordPress content directory. Uninstall may have failed.' );
+
+			return;
+		}
+
+	}
+
+	wordpress_memcached_support_set_admin_notice( 'WordPress Memcached Support object-cache.php removed from WordPress content directory. Memcached support deactivated.' );
+
+	return;
 }
 
 register_deactivation_hook( __FILE__, 'wordpress_memcached_support_deactivate' );
@@ -132,25 +183,28 @@ if ( ! function_exists( 'wp_content_dir' ) ) {
 }
 
 
-
 function wordpress_memcached_support_check_for_update() {
 
-	// plugins can be updated without the activation hook firing, this is a check for that
-	$last_activated_version = get_option( 'wordpress_memcached_support_version', '0.0' );
-	if ( WORDPRESS_MEMCACHED_SUPPORT_VERSION == $last_activated_version ) {
-		// no work to do we already activated at least once
-		return;
-	}
+	if ( ! ( defined( 'DOING_AJAX' ) && DOING_AJAX ) ) {
+		// plugins can be updated without the activation hook firing, this is a check for that
+		$last_activated_version = get_option( 'wordpress_memcached_support_version', '0.0' );
+		if ( WORDPRESS_MEMCACHED_SUPPORT_VERSION == $last_activated_version ) {
+			// no work to do we already activated at least once
+			return;
+		}
 
-	wordpress_memcached_support_activate();
+		wordpress_memcached_support_activate();
+	}
 }
 
-add_action( 'admin_init', 'wordpress_memcached_support_check_for_update' );
+if ( ! ( defined( 'DOING_AJAX' ) && DOING_AJAX ) ) {
+	add_action( 'admin_init', 'wordpress_memcached_support_check_for_update' );
+}
 
 
 function wordpress_memcached_support_set_admin_notice( $notice = false ) {
-	if (  empty( $notice ) ) {
-		delete_option(  'wordpress_memcached_support_notice' );
+	if ( empty( $notice ) ) {
+		delete_option( 'wordpress_memcached_support_notice' );
 	} else {
 		$notice = update_option( 'wordpress_memcached_support_notice', $notice );
 		error_log( __FILE__ . ': ' . $notice );
