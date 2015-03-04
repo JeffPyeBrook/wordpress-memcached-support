@@ -33,7 +33,7 @@ Author: Jeffrey Schutzman - - uses code from Ryan Boren, Denis de Bernardy, Matt
 **
 */
 
-define ( 'WORDPRESS_MEMCACHED_SUPPORT_VERSION', time() /*2.0'*/ );
+define ( 'WORDPRESS_MEMCACHED_SUPPORT_VERSION', '2.0' );
 
 function wordpress_memcached_support_activate() {
 
