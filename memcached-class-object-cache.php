@@ -1,12 +1,7 @@
 <?php
 /*
-Plugin Name: Memcached Redux
-Description: The real Memcached (not Memcache) backend for the WP Object Cache.
-Version: 0.1.3
-Plugin URI: http://wordpress.org/extend/plugins/memcached/
-Author: Scott Taylor - uses code from Ryan Boren, Denis de Bernardy, Matt Martz, Mike Schroder
-
-Install this file to wp-content/object-cache.php
+Code adapted from Memcached Redux Plugin
+Author Scott Taylor
 */
 
 if ( class_exists( 'Memcached' ) ) {
@@ -102,18 +97,23 @@ if ( class_exists( 'Memcached' ) ) {
 		$wp_object_cache->add_non_persistent_groups( $groups );
 	}
 
+	function wordpress_memcached_get_stats() {
+		global $wp_object_cache;
+		return $wp_object_cache->stats();
+	}
+
 	class WP_Object_Cache {
-		var $global_groups = array();
+		private $global_groups = array();
 
-		var $no_mc_groups = array();
+		private $no_mc_groups = array();
 
-		var $cache = array();
-		var $mc = array();
-		var $stats = array( 'add' => 0, 'delete' => 0, 'get' => 0, 'get_multi' => 0, );
-		var $group_ops = array();
+		private $cache = array();
+		private $mc = array();
+		private $stats = array( 'add' => 0, 'delete' => 0, 'get' => 0, 'get_multi' => 0, );
+		private $group_ops = array();
 
-		var $cache_enabled = true;
-		var $default_expiration = 0;
+		private $cache_enabled = true;
+		private $default_expiration = 0;
 
 		function add( $id, $data, $group = 'default', $expire = 0 ) {
 			$key = $this->key( $id, $group );
@@ -415,31 +415,20 @@ if ( class_exists( 'Memcached' ) ) {
 		}
 
 		function stats() {
-			echo "<p>\n";
-			foreach ( $this->stats as $stat => $n ) {
-				echo "<strong>$stat</strong> $n";
-				echo "<br/>\n";
-			}
-			echo "</p>\n";
-			echo "<h3>Memcached:</h3>";
-			foreach ( $this->group_ops as $group => $ops ) {
-				if ( ! isset( $_GET['debug_queries'] ) && 500 < count( $ops ) ) {
-					$ops = array_slice( $ops, 0, 500 );
-					echo "<i>Too many to show! <a href='" . add_query_arg( 'debug_queries', 'true' ) . "'>Show them anyway</a>.</i>\n";
+			$stats_text = '';
+			foreach ( $this->mc as $bucket => $mc ) {
+				$stats = $mc->getStats();
+				error_log( var_export( $stats, true ) ) ;
+				foreach ( $stats as $key => $details ) {
+					$stats_text .= 'memcached: ' . $key . "\n\r";
+					foreach ( $details as $name => $value ) {
+						$stats_text .= $name . ': ' . $value . "\n\r";
+					}
+					$stats_text .= "\n\r";
 				}
-				echo "<h4>$group commands</h4>";
-				echo "<pre>\n";
-				$lines = array();
-				foreach ( $ops as $op ) {
-					$lines[] = $this->colorize_debug_line( $op );
-				}
-				print_r( $lines );
-				echo "</pre>\n";
 			}
 
-			if ( property_exists( $this, 'debug' ) && $this->debug ) {
-				var_dump( $this->memcache_debug );
-			}
+			return $stats_text;
 		}
 
 		function &get_mc( $group ) {
@@ -451,7 +440,6 @@ if ( class_exists( 'Memcached' ) ) {
 		}
 
 		function failure_callback( $host, $port ) {
-			//error_log("Connection failure for $host:$port\n", 3, '/tmp/memcached.txt');
 		}
 
 		function __construct() {

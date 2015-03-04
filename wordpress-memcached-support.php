@@ -33,7 +33,7 @@ Author: Jeffrey Schutzman - - uses code from Ryan Boren, Denis de Bernardy, Matt
 **
 */
 
-define ( 'WORDPRESS_MEMCACHED_SUPPORT_VERSION', '2.0' );
+define ( 'WORDPRESS_MEMCACHED_SUPPORT_VERSION', time() /*2.0'*/ );
 
 function wordpress_memcached_support_activate() {
 
@@ -59,10 +59,10 @@ function wordpress_memcached_support_activate() {
 		// build an object-cache.php for this installation
 		$file_source                 = file_get_contents( $template_object_cache_file_path );
 		$this_installation_directory = plugin_dir_path( __FILE__ );
-		$file_source                 = str_replace(  '%PLUGININSTALLDIRECTORY%', $this_installation_directory, $file_source );
+		$file_source                 = str_replace( '%PLUGININSTALLDIRECTORY%', $this_installation_directory, $file_source );
 
 		file_put_contents( $distribution_object_cache_file_path, $file_source );
-		chmod( $distribution_object_cache_file_path, 644 );
+		chmod( $distribution_object_cache_file_path, 0644 );
 	}
 
 	if ( ! file_exists( $distribution_object_cache_file_path ) ) {
@@ -117,6 +117,7 @@ function wordpress_memcached_support_activate() {
 		$result = copy( $distribution_object_cache_file_path, $operational_object_cache_file_path );
 		if ( ! $result ) {
 			wordpress_memcached_support_set_admin_notice( 'ERROR: could not copy new object-cache.php from plugin directory to WordPress content directory, aborting' );
+
 			return;
 		}
 	}
@@ -133,7 +134,6 @@ function wordpress_memcached_support_deactivate() {
 
 	// Deactivation code here...
 	delete_option( 'wordpress_memcached_support_version' );
-
 
 	$distribution_object_cache_file_path = plugin_dir_path( __FILE__ ) . 'object-cache.php';
 	if ( file_exists( $distribution_object_cache_file_path ) ) {
@@ -163,10 +163,12 @@ function wordpress_memcached_support_deactivate() {
 
 			return;
 		}
-
 	}
 
 	wordpress_memcached_support_set_admin_notice( 'WordPress Memcached Support object-cache.php removed from WordPress content directory. Memcached support deactivated.' );
+
+	// sadly we cant show an admin notice after we deactivate, we need to clear it so it doesn't show on future activation
+	wordpress_memcached_support_set_admin_notice();
 
 	return;
 }
@@ -227,4 +229,51 @@ function wordpress_memcached_support_show_admin_notice() {
 $wordpress_memcached_support_notice = get_option( 'wordpress_memcached_support_notice', '' );
 if ( ! empty( $wordpress_memcached_support_notice ) ) {
 	add_action( 'admin_notices', 'wordpress_memcached_support_show_admin_notice' );
+}
+
+
+if ( is_admin() ) {
+	add_action( 'admin_menu', 'wordpress_memcached_support_admin_menu' );
+}
+
+function wordpress_memcached_support_admin_menu() {
+
+	add_management_page(
+		__( 'Memcached', 'wordpress-memcached' ),
+		__( 'Memcached', 'wordpress-memcached' ),
+		'manage_options',
+		'wordpress_memcached_support_admin_page',
+		'wordpress_memcached_support_admin_page'
+	);
+
+}
+
+function wordpress_memcached_support_admin_page() {
+	?>
+	<div class="wrap">
+		<h2>WordPress Memcached Status</h2>
+			<div>
+				<h3>
+				<?php
+				if ( class_exists( 'Memcached' ) ) {
+					_e( 'Using the PHP Memcached class to interact with Memcached', 'wordpress-memcached' );
+				} else if ( class_exists( 'Memcache' ) ) {
+					_e( 'Using the PHP Memcache class to interact with Memcached', 'wordpress-memcached' );
+				} else {
+					_e( 'No PHP Memcached or Memcache class present, this is really bad!', 'wordpress-memcached' );
+				}
+				?>
+				</h3>
+			</div>
+			<br>
+			<div>
+			<?php
+				if ( function_exists( 'wordpress_memcached_get_stats' ) ) {
+					$stats_text = wordpress_memcached_get_stats();
+					echo nl2br( $stats_text );
+				}
+			?>
+			</div>
+	</div>
+	<?php
 }
