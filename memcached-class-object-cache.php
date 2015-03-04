@@ -418,7 +418,6 @@ if ( class_exists( 'Memcached' ) ) {
 			$stats_text = '';
 			foreach ( $this->mc as $bucket => $mc ) {
 				$stats = $mc->getStats();
-				error_log( var_export( $stats, true ) ) ;
 				foreach ( $stats as $key => $details ) {
 					$stats_text .= 'memcached: ' . $key . "\n\r";
 					foreach ( $details as $name => $value ) {
