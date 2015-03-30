@@ -140,7 +140,6 @@ function wordpress_memcached_support_deactivate() {
 		unlink( $distribution_object_cache_file_path );
 		if ( file_exists( $distribution_object_cache_file_path ) ) {
 			wordpress_memcached_support_set_admin_notice( 'ERROR DEACTIVATING: could remove object-cache.php from WordPress plugin directory. Uninstall may have failed, aborting' );
-
 			return;
 		}
 	}
@@ -150,7 +149,6 @@ function wordpress_memcached_support_deactivate() {
 		unlink( $operational_object_cache_file_path );
 		if ( file_exists( $operational_object_cache_file_path ) ) {
 			wordpress_memcached_support_set_admin_notice( 'ERROR DEACTIVATING: could remove object-cache.php from WordPress content directory. Uninstall may have failed, aborting' );
-
 			return;
 		}
 	}
@@ -160,7 +158,6 @@ function wordpress_memcached_support_deactivate() {
 		$result = copy( $backup_distribution_object_cache_file_path, $operational_object_cache_file_path );
 		if ( ! $result ) {
 			wordpress_memcached_support_set_admin_notice( 'ERROR DEACTIVATING: could restore backup object-cache.php to WordPress content directory. Uninstall may have failed.' );
-
 			return;
 		}
 	}
