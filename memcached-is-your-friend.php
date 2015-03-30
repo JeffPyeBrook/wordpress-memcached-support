@@ -1,9 +1,9 @@
 <?php
 /*
-Plugin Name: Memcached Object Cache for WordPress
+Plugin Name: MemcacheD Is Your Friend
 Description: Memcached via PHP Memcache or Memcached Class Support for WordPress
 Version: 2.0.0
-Plugin URI: http://wordpress.org/extend/plugins/wordpress-memcached-support/
+Plugin URI: http://wordpress.org/extend/plugins/memcached-is-your-friend//
 Author: Jeffrey Schutzman - - uses code from Ryan Boren, Denis de Bernardy, Matt Martz, Mike Schroder, Scott Taylor
 */
 

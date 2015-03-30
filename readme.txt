@@ -1,16 +1,19 @@
-=== Memcached Support for WordPress ===
+===  MemcacheD Is Your Friend  ===
 Contributors: pyebrook
 Tags: cache, memcached, memcache
 Requires at least: 3.0
 Tested up to: 4.1.1
 Stable tag: 2.0.0
+License: GPVv2
+Donate Link: http://www.pyebrook.com
 
-Adds memcached object cache support to WordPress.  Detects either the PECL Memecache or PECL Memcached (Memcached preferred)
-class and uses the appropriate interface.  You don't need to figure out which class is available in your installation.
+Adds MemcacheD object cache support to WordPress and auto-configures your cache setup.
 
 == Description ==
 Memcached Object Cache provides a persistent backend for the WordPress object cache. A memcached server and either the
-the PECL Memcached or PECL Memcache extension and class are required.
+the PECL Memcached or PECL Memcache extension and class are required.  Detects either the PECL Memecache or PECL
+Memcached (Memcached preferred) class and uses the appropriate interface. That means you don't need to figure out
+which PHP class is available in your installation, the plugin will detect the proper configuration.
 
 This plugin does not require manual copying of files between directories for installation, and it doesn't require the installer
 to differentiate between the memcache and memcached PECL extensions if they know their host makes once available.
@@ -46,8 +49,16 @@ $memcached_servers = array(
 );
 `
 
+== Screenshots ==
+= No user or administrator options, so no screenshots :)
+
 
 == Changelog ==
 
 = 2.0.0 =
 * Initial release public based on previous works
+
+== Upgrade Notice ==
+= 2.0.0 =
+* Initial release public based on previous works
+

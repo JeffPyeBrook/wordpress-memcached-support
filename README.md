@@ -1,4 +1,4 @@
-# Memcached Support for WordPress #
+# MemcacheD Is Your Friend - Memcached Support for WordPress #
 ==============================
 
 
